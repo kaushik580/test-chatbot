@@ -1,0 +1,97 @@
+Jurisdiction:
+
+A station jurisdiction is the area covered by a specific station to deliver AMZL packages. In JP network, the area under station jurisdiction is based on Pin-codes. To define the area which is being served by a specific station, a pin-code/station mapping needs to be configured by our team (JPTS). With Scytale rollout, JP network follows a hybrid approach of maintaining the jurisdiction areas by both Pin-codes and Geo-codes. The changes to station jurisdiction are done using CIMS* proposal which are deployed in ATROPS via RCs while all the geo-code level changes are done on JAS* and then pushed to ATROPS. Jurisdiction transfers in JP network are classified into three types:
+
+Expansion of Jurisdiction Area (Add)
+Removal of Jurisdiction Area (Remove)
+Transfer of Jurisdiction Area (Re-organize/Closure)
+Expansion of Jurisdiction Area (Add):
+
+For this use-case, there are two sub use-cases: (1) Pin-code addition to new stations (2) Pin-code addition to existing stations. Generally, (1) is covered while configuring new node launches based on the inputs provided. For (2), the requests are raised to COSM SIMs folder and the COSM team is the primary owner for this folder. COSM team handles JAS changes, maintaining AAs*, RGUs*, Exclusion Zones, Routing Requests and since all these configuration changes are related to a station’s jurisdiction hence, the jurisdiction changes are part of COSM team portfolio. For (1) with new stations, ensure to deploy the JAS polygon proposal through the Scytale enablement approach prior to the DS launch (refer to DS-launch SOP).
+
+Steps involved:
+
+Every Jurisdiction Change request comes with an effective OFD* mentioned and the change needs to be executed in adherence to the OFD and worked backwards to determine the effective first FC CPT and slam window to that FC CPT; else there will volume leak at the station or attainment loss to 3P.
+Usually the first effective CPT for an OFD will be in the evening, for which majority of slam would happen post noon. It is imperative to avoid changing the jurisdiction for the last Same-day CPT (Wave 3 SM) which is usually around noon, and hence the optimal RC will the 12:00 RC of prev. day of OFD
+Refer to Exception Handling section for Speed & 48hr+ connections
+For the specific station, download the “Named Jurisdiction” configuration element via CIMS platform.
+Check the input received which consists of the list of pincodes needs to be added.
+Crosscheck the received pin-code list with the “Jurisdiction Master” available in the JPTS Share Drive to eliminate the overlapping use-cases.
+Add the received pincode list to the Named Jurisdiction configuration element of the specific station and re-upload the file by creating a proposal via CIMS platform.
+Once the intended pincode list is uploaded by creating a proposal, attach it to the scheduled RC as per the effective OFD mentioned.
+The proposal needs to be PR’d internally and approved to have it deployed via scheduled RC that was originally planned based on OFD and reflect the changes on ATROPS.
+The COSM team generates a GCRS publish in parallel by updating changes on JAS tool leading to a CIMS proposal generation which also needs to be pushed to ATROPS production.
+Always ensure to tag the Pincode level and Geo-code level configuration change to the same RC.
+Removal of Jurisdiction Area (Remove):
+
+For this use-case, there are no sub use-cases. These requests generally deal with removal of pin-codes from the existing station.
+
+Steps involved:
+
+Follow the same steps mentioned for “Add” usecase as-is except for addition, the deletion of pin-codes needs to be performed based on the inputs received.
+Refer to Exception Handling section for Speed & 48hr+ connections
+Transfer of Jurisdiction Area (Closure):
+
+For this use-case, there are no sub use-cases. These requests generally deal with transfer of pin-codes often seen during closures (old node closure leading to transfer of jurisdiction to new node).
+
+Steps involved:
+
+This usecase involves two stations (one which is about to close and the other one is the new node which going to be launched/already launched.
+Follow the same steps mentioned for “Add/Remove” usecase as-is. The pin-codes of old node need to be removed and the pin-codes of new node need to be added.
+Refer to Exception Handling section for Speed & 48hr+ connections
+Validation Checks post the ATROPS configuration:
+
+After a successful ATROPS production configuration change, the need for a validation check is important as there can be instances related to undesired output. To mitigate the probability of such an undesired output, a validation needs to be performed to check if the system understood the change performed. Validation checks are carried out via CAPs Dashboard and GSM Call testing.
+
+Validation Check via CAPs Dashboard: Post the successful configuration, a CAPs check needs to be done by entering the station specific attributes like warehouse name and sort codes. As in the backend systems (ATROPS), the Named Jurisdictions are mapped to station specific sort codes. The check involves looking at the cap, schedule and slam numbers/curves to identify the outliers (if any).
+
+Validation Check via GSM Test: Get Ship Method Test (or) GSM Test call is another way of validation check performed post a successful configuration. Based on the inputs received, the test can be done to any pin-code provided in the input list. All the necessary attributes like Ship Option, Customer Address, Dimensions, Warehouse name need to be entered and checked. A successful GSM test call returns the desired system route assigned by ATROPS.
+
+Exception Handling Mechanisms:
+
+For Speed service use-case
+For 48hr+ connections use-case
+For Speed service use-case: Speed services are divided into namely - SSD*, S2* and MDW*. SSD and S2 services are commingled to enable MDW. In general, this use-case deals with expansion/removal of the jurisdiction area to support the speed services.
+
+Deployment Timing: Speed connections (S1 & S2) need separate deployment in the 00:00 RC of the next day, since the Speed CPTs are after the 12:00 RC that is usually used for jurisdiction changes.
+
+In the event this is not done, pls prepare ops for the following:
+
+Addition: Possible S1/S2 early-arrival for added ZIPs at the DS
+Removal: KOs for S1/S2 orders already in the pipeline from ZIPs being removed
+Transfer: KOs for S1/S2 orders already in the pipeline if the new DS does not have S1/S2 connections
+With Full polygon jurisdiction planned, the JAS publish for this needs a separate SOP with the COSM team to be established. This action item has to be taken up with COSM.
+
+Steps involved:
+
+All the intended pincodes (generally, the CORE NJ pin-codes) for speed service are mapped to a standard Named Jurisdiction named “XXXX_XPT_ALL” NJ where XXXX refers to the node name and the unintended pin-codes are marked “exclude” in this NJ.
+If the request is to expand the jurisdiction area, the pincode list received needs to be checked with the “exclude” list and have them removed from “exclude” so that the pin-codes are enabled for the speed service.
+If the request is related to removal, the pincode list received need to be marked as “exclude”.
+The COSM team generates a GCRS publish in parallel by updating changes on JAS tool leading to a CIMS proposal generation which also needs to be pushed to ATROPS production.
+Always ensure to tag the Pincode level and Geo-code level configuration change to the same RC.
+For 48hr+ connections use-case: These are edge cases dealing with stations located far away and heavy-bulky which have a different FC CPT structure (sites: DOW2, DHK1, OSP3, OHK1, JKB8, JKA1/2/3, H***).
+
+Steps involved:
+
+Follow the same steps mentioned for “Add/Remove” usecase as-is.
+The changes for these requests are often raised with 24hrs OFD window (backtracking for FC CPT time) while the desired OFD window is 48hrs or more considering they are located far away.
+This check is a crucial as it is deals with distance and changes on these stations cannot be applicable for 24hrs OFD window.
+Always ensure to check the OFD mentioned by the requester and tag it accordingly to the scheduled RC based on the 48Hr+ TT for that node. Please determine the corresponding RC timing for these with caution based on FC CPT & TT.
+For all the H**** node requests, please tag it to the scheduled RC D-2 (18:00 RC). Ex: Assume Sept 1st as OFD, then, it needs to be tagged to 30th 18:00 RC.
+Glossary:
+
+JAS – Jurisdiction Authority Service
+
+AA – Attainment Area
+
+RGU – Referenced Geographical Unit
+
+RCs – Release Candidates
+
+OFD – Out for Delivery
+
+SSD – Sub Same Day
+
+S2 – Speed Cycle-2
+
+MDW – Multiple Delivery Window
